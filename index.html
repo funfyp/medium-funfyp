@@ -1,63 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Funfyp Medium Articles | medium.funfyp.com</title>
-    <meta name="description" content="Latest articles from Melody's Medium blog - exploring quantum concepts, AI, and innovative thinking">
-    <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Melody — Medium Articles Hub</title>
+  <meta name="description" content="Quantum, AI, creativity, and polymathic notes. Latest posts from @Funfyp." />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Melody — Medium Articles Hub" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://medium.funfyp.com" />
+  <meta property="og:image" content="https://medium.funfyp.com/og-image.jpg" />
+  <meta property="og:description" content="Quantum, AI, creativity, and polymathic notes. Latest posts from @Funfyp." />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Melody — Medium Articles Hub" />
+  <meta name="twitter:description" content="Quantum, AI, creativity, and polymathic notes. Latest posts from @Funfyp." />
+  <meta name="twitter:image" content="https://medium.funfyp.com/og-image.jpg" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css?v=2">
 </head>
 <body>
-    <header>
-        <div class="container">
-            <h1>
-                <span class="logo">medium.funfyp</span>
-                <span class="subtitle">Articles by Melody</span>
-            </h1>
-            <nav>
-                <a href="https://funfyp.com" class="nav-link">← Back to Main Site</a>
-                <a href="https://medium.com/@Funfyp" class="nav-link" target="_blank">Medium Profile</a>
-            </nav>
+  <header>
+    <div class="container header-wrap">
+      <div class="profile">
+        <img class="avatar" src="https://unavatar.io/medium/Funfyp" alt="@Funfyp"/>
+        <div class="who">
+          <h1>Melody <span class="handle">@Funfyp</span></h1>
+          <p class="tagline">Quantum, AI, creative systems, and polymathic notes.</p>
+          <div class="socials">
+            <a href="https://medium.com/@Funfyp" target="_blank" rel="noopener">Medium</a>
+            <a href="https://github.com/funfyp" target="_blank" rel="noopener">GitHub</a>
+            <a href="https://x.com/intent/follow?screen_name=Funfyp" target="_blank" rel="noopener">Follow on X</a>
+          </div>
         </div>
-    </header>
+      </div>
+      <button id="share-hub" class="primary">Share my hub</button>
+    </div>
+  </header>
 
-    <main class="container">
-        <section class="hero">
-            <h2>Latest Articles</h2>
-            <p>Exploring the intersections of quantum mechanics, artificial intelligence, and creative thinking through the lens of hyperthymesia and polymathic curiosity.</p>
-        </section>
+  <main class="container">
+    <section class="filters">
+      <div id="tag-chips" class="chips"></div>
+      <div class="view-toggle">
+        <button id="gridBtn" class="toggle active">Grid</button>
+        <button id="listBtn" class="toggle">List</button>
+      </div>
+    </section>
 
-        <div id="loading" class="loading">
-            <div class="spinner"></div>
-            <p>Loading latest articles...</p>
-        </div>
+    <section class="hero">
+      <h2>Latest from Medium</h2>
+      <p>Fresh posts pulled from @Funfyp and ready to share anywhere.</p>
+    </section>
 
-        <div id="error" class="error-message" style="display: none;">
-            <p>Unable to load articles at the moment. Please try again later.</p>
-            <button onclick="loadArticles()" class="retry-btn">Retry</button>
-        </div>
+    <div id="loading" class="loading"><div class="spinner"></div><p>Loading…</p></div>
+    <div id="error" class="error-message" style="display:none;">
+      <p>Couldn’t load articles. Please retry.</p>
+      <button onclick="loadArticles()" class="retry-btn">Retry</button>
+    </div>
 
-        <div id="articles-container" class="articles-grid">
-            <!-- Articles will be dynamically loaded here -->
-        </div>
+    <div id="articles-container" class="articles-grid"></div>
 
-        <div class="rss-info">
-            <p>
-                <strong>RSS Feed:</strong> 
-                <a href="https://medium.com/feed/@Funfyp" target="_blank">https://medium.com/feed/@Funfyp</a>
-            </p>
-            <p>Articles are automatically updated when new content is published on Medium.</p>
-        </div>
-    </main>
+    <div class="rss-info">
+      <p><strong>RSS:</strong> <a href="https://medium.com/feed/@Funfyp" target="_blank">https://medium.com/feed/@Funfyp</a></p>
+    </div>
+  </main>
 
-    <footer>
-        <div class="container">
-            <p>&copy; 2025 Funfyp.com | Medium Articles Showcase</p>
-            <p>Built with RSS integration and auto-update functionality</p>
-        </div>
-    </footer>
+  <footer>
+    <div class="container">
+      <p>&copy; 2025 Funfyp.com — Medium hub</p>
+    </div>
+  </footer>
 
-    <script src="script.js"></script>
+  <script src="/script.js?v=2" defer></script>
 </body>
 </html>
