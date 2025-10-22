@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Funfyp Medium Articles | medium.funfyp.com</title>
+    <meta name="description" content="Latest articles from Melody's Medium blog - exploring quantum concepts, AI, and innovative thinking">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>
+                <span class="logo">medium.funfyp</span>
+                <span class="subtitle">Articles by Melody</span>
+            </h1>
+            <nav>
+                <a href="https://funfyp.com" class="nav-link">← Back to Main Site</a>
+                <a href="https://medium.com/@Funfyp" class="nav-link" target="_blank">Medium Profile</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="hero">
+            <h2>Latest Articles</h2>
+            <p>Exploring the intersections of quantum mechanics, artificial intelligence, and creative thinking through the lens of hyperthymesia and polymathic curiosity.</p>
+        </section>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Loading latest articles...</p>
+        </div>
+
+        <div id="error" class="error-message" style="display: none;">
+            <p>Unable to load articles at the moment. Please try again later.</p>
+            <button onclick="loadArticles()" class="retry-btn">Retry</button>
+        </div>
+
+        <div id="articles-container" class="articles-grid">
+            <!-- Articles will be dynamically loaded here -->
+        </div>
+
+        <div class="rss-info">
+            <p>
+                <strong>RSS Feed:</strong> 
+                <a href="https://medium.com/feed/@Funfyp" target="_blank">https://medium.com/feed/@Funfyp</a>
+            </p>
+            <p>Articles are automatically updated when new content is published on Medium.</p>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Funfyp.com | Medium Articles Showcase</p>
+            <p>Built with RSS integration and auto-update functionality</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
