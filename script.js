@@ -1,195 +1,129 @@
-// Medium RSS Feed Integration for medium.funfyp.com
-// Using rss2json API to convert Medium RSS to JSON
-
+// v2 social hub features
+const HUB_URL = 'https://medium.funfyp.com';
 const RSS_URL = 'https://medium.com/feed/@Funfyp';
 const API_URL = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(RSS_URL)}`;
 
-// Load articles when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    loadArticles();
+const state = { all: [], filtered: [], tags: new Set(), listView: false };
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadArticles();
+  wireViewToggles();
+  document.getElementById('share-hub')?.addEventListener('click', () => shareUrl(HUB_URL, 'Melody — Medium Articles Hub'));
 });
 
-// Main function to fetch and display articles
-async function loadArticles() {
-    showLoading();
-    
-    try {
-        const response = await fetch(API_URL);
-        const data = await response.json();
-        
-        if (data.status === 'ok' && data.items && data.items.length > 0) {
-            displayArticles(data.items);
-        } else {
-            showError();
-        }
-    } catch (error) {
-        console.error('Error fetching articles:', error);
-        showError();
-    }
+async function loadArticles(){
+  showLoading();
+  try{
+    const r = await fetch(API_URL);
+    const data = await r.json();
+    if(data.status !== 'ok') throw new Error('Bad status');
+    state.all = data.items || [];
+    collectTags(state.all);
+    renderChips();
+    applyFilter();
+  }catch(e){ showError(); }
 }
 
-// Display articles in the grid
-function displayArticles(articles) {
-    const container = document.getElementById('articles-container');
-    const loading = document.getElementById('loading');
-    const error = document.getElementById('error');
-    
-    // Hide loading and error states
-    loading.style.display = 'none';
-    error.style.display = 'none';
-    
-    // Clear container and add articles
-    container.innerHTML = '';
-    
-    articles.forEach((article, index) => {
-        const articleCard = createArticleCard(article, index);
-        container.appendChild(articleCard);
-    });
+function collectTags(items){
+  state.tags = new Set();
+  items.forEach(it => (it.categories||[]).forEach(c => state.tags.add(c)));
 }
 
-// Create individual article card
-function createArticleCard(article, index) {
-    const card = document.createElement('div');
-    card.className = 'article-card';
-    card.style.animationDelay = `${(index + 1) * 0.1}s`;
-    
-    // Extract image from content or use placeholder
-    const imageMatch = article.content.match(/<img[^>]+src="([^">]+)"/g);
-    const imageUrl = imageMatch ? imageMatch[1] : null;
-    
-    // Clean up excerpt (remove HTML tags)
-    const excerpt = stripHtml(article.content).substring(0, 200) + '...';
-    
-    // Format date
-    const date = new Date(article.pubDate).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-    });
-    
-    // Extract reading time estimate (approximate)
-    const wordCount = stripHtml(article.content).split(' ').length;
-    const readingTime = Math.ceil(wordCount / 200); // Average reading speed
-    
-    card.innerHTML = `
-        ${imageUrl ? `<img src="${imageUrl}" alt="${article.title}" class="article-image" loading="lazy">` : '<div class="article-image" style="background: linear-gradient(45deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem; font-weight: 600;">📖</div>'}
-        <div class="article-content">
-            <h3 class="article-title">${article.title}</h3>
-            <p class="article-excerpt">${excerpt}</p>
-            <div class="article-meta">
-                <span class="article-date">${date}</span>
-                <span class="reading-time">${readingTime} min read</span>
-            </div>
-            <div class="article-tags">
-                ${extractTags(article.categories).map(tag => `<span class="tag">${tag}</span>`).join('')}
-            </div>
-            <a href="${article.link}" target="_blank" class="read-more">Read Full Article</a>
+function renderChips(){
+  const wrap = document.getElementById('tag-chips');
+  if(!wrap) return;
+  const tags = ['All', ...Array.from(state.tags).slice(0,12)];
+  wrap.innerHTML = '';
+  tags.forEach(tag => {
+    const b = document.createElement('button');
+    b.className = 'chip' + (tag==='All' ? ' active' : '');
+    b.textContent = tag;
+    b.onclick = () => { document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active')); b.classList.add('active'); applyFilter(tag); };
+    wrap.appendChild(b);
+  });
+}
+
+function applyFilter(tag='All'){
+  state.filtered = tag==='All' ? state.all : state.all.filter(a => (a.categories||[]).includes(tag));
+  renderArticles();
+}
+
+function wireViewToggles(){
+  const gridBtn = document.getElementById('gridBtn');
+  const listBtn = document.getElementById('listBtn');
+  gridBtn?.addEventListener('click', ()=>{ state.listView=false; document.body.classList.remove('list'); gridBtn.classList.add('active'); listBtn.classList.remove('active'); renderArticles(); });
+  listBtn?.addEventListener('click', ()=>{ state.listView=true; document.body.classList.add('list'); listBtn.classList.add('active'); gridBtn.classList.remove('active'); renderArticles(); });
+}
+
+function renderArticles(){
+  const container = document.getElementById('articles-container');
+  document.getElementById('loading').style.display='none';
+  document.getElementById('error').style.display='none';
+  container.innerHTML = '';
+  state.filtered.forEach((article,i)=> container.appendChild(card(article,i)));
+}
+
+function card(article, i){
+  const c = document.createElement('div');
+  c.className = 'article-card';
+  c.style.animationDelay = `${(i+1)*0.08}s`;
+  const image = extractImage(article.content);
+  const excerpt = truncate(stripHtml(article.content), 200);
+  const date = new Date(article.pubDate).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+  const read = Math.max(1, Math.ceil(stripHtml(article.content).split(/\s+/).length/200));
+  const likes = getLikes(article.link);
+  c.innerHTML = `
+    ${image ? `<img src="${image}" class="article-image" alt="${escapeHtml(article.title)}" loading="lazy">` : '<div class="article-image"></div>'}
+    <div class="article-content">
+      <h3 class="article-title">${article.title}</h3>
+      <p class="article-excerpt">${excerpt}</p>
+      <div class="article-meta"><span class="article-date">${date}</span><span class="reading-time">${read} min read</span></div>
+      <div class="article-tags">${(article.categories||[]).slice(0,3).map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+      <div class="article-footer">
+        <div class="share-row">
+          ${btn('X', ()=>shareTo('x',article))}
+          ${btn('in', ()=>shareTo('li',article))}
+          ${btn('🔗', ()=>copyLink(article.link))}
         </div>
-    `;
-    
-    // Add click handler for the entire card
-    card.addEventListener('click', function(e) {
-        if (e.target.tagName !== 'A') {
-            window.open(article.link, '_blank');
-        }
-    });
-    
-    return card;
+        <div>
+          <button class="share-btn like" aria-label="Like" onclick="toggleLike('${article.link}')">❤ ${likes}</button>
+          <a class="read-more" href="${article.link}" target="_blank" rel="noopener">Read →</a>
+        </div>
+      </div>
+    </div>`;
+  c.addEventListener('click', e => { if(e.target.tagName!=='A' && !e.target.classList.contains('share-btn')) window.open(article.link,'_blank'); });
+  return c;
 }
 
-// Helper function to strip HTML tags
-function stripHtml(html) {
-    const tmp = document.createElement('div');
-    tmp.innerHTML = html;
-    return tmp.textContent || tmp.innerText || '';
+function btn(label, fn){ const b=document.createElement('button'); b.className='share-btn'; b.textContent=label; b.onclick=(e)=>{e.stopPropagation(); fn();}; return b; }
+
+function shareTo(kind, article){
+  const u = encodeURIComponent(article.link);
+  const t = encodeURIComponent(article.title);
+  let url = '';
+  if(kind==='x') url = `https://twitter.com/intent/tweet?url=${u}&text=${t}`;
+  if(kind==='li') url = `https://www.linkedin.com/shareArticle?url=${u}&title=${t}`;
+  window.open(url,'_blank','noopener');
 }
 
-// Extract and format tags/categories
-function extractTags(categories) {
-    if (!categories || categories.length === 0) {
-        return ['Article'];
-    }
-    return categories.slice(0, 3); // Limit to first 3 tags
+function shareUrl(url, title){
+  if(navigator.share){ navigator.share({title, url}).catch(()=>{}); }
+  else { copyLink(url); }
 }
 
-// Show loading state
-function showLoading() {
-    document.getElementById('loading').style.display = 'flex';
-    document.getElementById('error').style.display = 'none';
-    document.getElementById('articles-container').innerHTML = '';
+function copyLink(url){ navigator.clipboard?.writeText(url); }
+
+function toggleLike(key){
+  const n = getLikes(key)+1; localStorage.setItem('like:'+key, n); renderArticles();
 }
+function getLikes(key){ return parseInt(localStorage.getItem('like:'+key)||'0',10); }
 
-// Show error state
-function showError() {
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('error').style.display = 'block';
-    document.getElementById('articles-container').innerHTML = '';
-}
+function extractImage(html){ const m = html.match(/<img[^>]+src="([^"]+)"/); return m?m[1]:''; }
+function stripHtml(h){ const d=document.createElement('div'); d.innerHTML=h; return d.textContent||''; }
+function truncate(s,n){ return s.length>n? s.slice(0,n)+'…': s; }
+function escapeHtml(s){ return s.replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m])); }
 
-// Auto-refresh articles every 30 minutes
-setInterval(loadArticles, 30 * 60 * 1000);
+function showLoading(){ document.getElementById('loading').style.display='flex'; }
+function showError(){ document.getElementById('loading').style.display='none'; document.getElementById('error').style.display='block'; }
 
-// Add smooth scrolling for internal links
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            target.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-            });
-        }
-    });
-});
-
-// Add intersection observer for animation triggers
-const observerOptions = {
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px'
-};
-
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.style.opacity = '1';
-            entry.target.style.transform = 'translateY(0)';
-        }
-    });
-}, observerOptions);
-
-// Observe article cards when they're added
-function observeArticleCards() {
-    const cards = document.querySelectorAll('.article-card');
-    cards.forEach(card => observer.observe(card));
-}
-
-// Call after articles are loaded
-const originalDisplayArticles = displayArticles;
-displayArticles = function(articles) {
-    originalDisplayArticles(articles);
-    setTimeout(observeArticleCards, 100);
-};
-
-// Handle offline/online status
-window.addEventListener('online', function() {
-    console.log('Connection restored, refreshing articles...');
-    loadArticles();
-});
-
-window.addEventListener('offline', function() {
-    console.log('Connection lost');
-    // Could show an offline indicator here
-});
-
-// Keyboard navigation for accessibility
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'r' && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault();
-        loadArticles();
-    }
-});
-
-console.log('📖 Medium.funfyp.com loaded successfully!');
-console.log('🔄 Articles will auto-refresh every 30 minutes');
-console.log('⌨️  Press Ctrl+R (Cmd+R) to manually refresh articles');
+setInterval(loadArticles, 30*60*1000);
